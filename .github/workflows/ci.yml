@@ -1,0 +1,31 @@
+name: Backend CI
+
+on:
+  # Jalankan workflow saat ada push atau pull request ke branch 'main'
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout kode ke runner
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      # 2. Set versi Node.js yang digunakan
+      - name: Use Node.js 20.16
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20.16
+
+      # 3. Install dependensi
+      - name: Install dependencies
+        run: npm install
+
+      # 4. Build proyek (kompilasi TypeScript)
+      - name: Build
+        run: npm run build
