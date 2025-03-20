@@ -33,7 +33,7 @@ subscriber.subscribe(CHANNEL_NAME, (message: string) => {
     const data = JSON.parse(message.replace(/'/g, '"'));
     // Kirim data ke client via WebSocket
     io.emit("camera_frames", data);
-    console.log("Message from Redis:", data);
+    // console.log("Message from Redis:", data);
   } catch (err) {
     console.error("Error parsing message from Redis:", err);
   }
