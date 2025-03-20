@@ -1,8 +1,12 @@
 import express, { Request, Response } from "express";
+import { createServer } from "http";
+import { Server } from "socket.io";
 
 import { subscriber, CHANNEL_NAME } from "./config/redis";
 
 const app = express();
+const server = createServer(app);
+const io = new Server(server);
 const PORT: number = parseInt(process.env.PORT || "3000");
 
 // Middleware
@@ -20,6 +24,8 @@ subscriber.subscribe(CHANNEL_NAME, (message: string) => {
     // Format payload:
     // { "hasModel": bool, "timestamp": <time>, "image": <b64> }
     const data = JSON.parse(message.replace(/'/g, '"'));
+    // Kirim data ke client via WebSocket
+    io.emit("camera_frames", data);
   } catch (err) {
     console.error("Error parsing message from Redis:", err);
   }
