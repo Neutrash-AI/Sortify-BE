@@ -1,7 +1,9 @@
 import express from "express";
 
+import { subscriber, CHANNEL_NAME } from "./config/redis";
+
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT: number = parseInt(process.env.PORT || "3000");
 
 // Middleware
 app.use(express.json());
@@ -9,6 +11,18 @@ app.use(express.json());
 // Routes
 app.get("/", (req, res) => {
   res.send("Hello, Express + TypeScript!");
+});
+
+// Subscribe to Redis channel
+subscriber.subscribe(CHANNEL_NAME, (message: string) => {
+  try {
+    // message adalah string, parse ke object
+    // Format payload:
+    // { "hasModel": bool, "timestamp": <time>, "image": <b64> }
+    const data = JSON.parse(message.replace(/'/g, '"'));
+  } catch (err) {
+    console.error("Error parsing message from Redis:", err);
+  }
 });
 
 // Start Server
