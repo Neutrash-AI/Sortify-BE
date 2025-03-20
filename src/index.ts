@@ -1,4 +1,4 @@
-import express from "express";
+import express, { Request, Response } from "express";
 
 import { subscriber, CHANNEL_NAME } from "./config/redis";
 
@@ -9,7 +9,7 @@ const PORT: number = parseInt(process.env.PORT || "3000");
 app.use(express.json());
 
 // Routes
-app.get("/", (req, res) => {
+app.get("/", (req: Request, res: Response) => {
   res.send("Hello, Express + TypeScript!");
 });
 
