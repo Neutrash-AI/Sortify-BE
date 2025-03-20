@@ -9,7 +9,7 @@ const server = createServer(app);
 const io = new Server(server, {
   // ! This is a security risk, only use it for development
   cors: {
-    origin: "*",
+    origin: "http://localhost:5173",
   },
   maxHttpBufferSize: 1e8, // max buffer size (100 MB) for http messages
   serveClient: false, // we use separate socket.io client in frontend
@@ -40,6 +40,6 @@ subscriber.subscribe(CHANNEL_NAME, (message: string) => {
 });
 
 // Start Server
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
