@@ -1,17 +1,18 @@
-const redis = require("redis");
+import { createClient } from "redis";
 
 // Konfigurasi Redis
-const REDIS_HOST = "localhost";
-const REDIS_PORT = 6379;
-const CHANNEL_NAME = "camera_frames";
+const REDIS_HOST: string = "localhost";
+const REDIS_PORT: number = 6379;
+const CHANNEL_NAME: string = "camera_frames";
 
 // Buat subscriber Redis
-const subscriber = redis.createClient({
-  host: REDIS_HOST,
-  port: REDIS_PORT,
+const subscriber = createClient({
+  url: `redis://${REDIS_HOST}:${REDIS_PORT}`,
 });
 // Subscribe ke channel
-subscriber.subscribe(CHANNEL_NAME);
+subscriber
+  .connect()
+  .catch((err) => console.error("Redis connection error:", err));
 
 // Export subscriber
-module.exports = subscriber;
+export { subscriber, CHANNEL_NAME };
