@@ -1,19 +1,11 @@
 import express, { Request, Response } from "express";
 import { createServer } from "http";
-import { Server } from "socket.io";
 
 import { subscriber, CHANNEL_NAME } from "./config/redis";
+import socketConfig from "./config/socketConfig";
 
 const app = express();
 const server = createServer(app);
-const io = new Server(server, {
-  // ! This is a security risk, only use it for development
-  cors: {
-    origin: "http://localhost:5173",
-  },
-  maxHttpBufferSize: 1e8, // max buffer size (100 MB) for http messages
-  serveClient: false, // we use separate socket.io client in frontend
-});
 const PORT: number = parseInt(process.env.PORT || "3000");
 
 // Middleware
@@ -23,6 +15,8 @@ app.use(express.json());
 app.get("/", (req: Request, res: Response) => {
   res.send("Hello, Express + TypeScript!");
 });
+
+socketConfig(server);
 
 // Subscribe to Redis channel
 subscriber.subscribe(CHANNEL_NAME, (message: string) => {
