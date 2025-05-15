@@ -1,24 +1,67 @@
-import { Server, Socket } from "socket.io";
+import { connectToDatabase } from "../config/mongo";
 
+export interface Classification {
+  timestamp: Date;
+  label: string;
+}
+
+export async function saveClassification(label: string, timestamp: number) {
+  const client = await connectToDatabase();
+  const db = client.db(); // gunakan nama default atau via URI
+  const collection = db.collection<Classification>("classifications");
+
+  const doc: Classification = {
+    timestamp: new Date(timestamp * 1000), // detik → milidetik
+    label,
+  };
+
+  await collection.insertOne(doc);
+}
+
+// src/services/socketHandler.ts
+import { Server, Socket } from "socket.io";
 import { subscriber, CHANNEL_NAME } from "../config/redis";
 
 export default (io: Server) => {
+  // Menyimpan deteksi terakhir untuk mencegah penyimpanan duplikat
+  let lastDetection: { label: string; confidence: number } | null = null;
+
   io.on("connection", (socket: Socket) => {
     console.log("Client connected:", socket.id);
 
-    // Subscribe to Redis channel
-    subscriber.subscribe(CHANNEL_NAME, (message: string) => {
+    // Subscribe ke channel Redis
+    subscriber.subscribe(CHANNEL_NAME, async (message: string) => {
       try {
-        // message adalah string, parse ke object
-        // Format payload:
-        // { "hasModel": bool, "timestamp": <time>, "image": <b64> }
-        const data = JSON.parse(message.replace(/'/g, '"'));
-        // Kirim data ke client via WebSocket
+        const data = JSON.parse(message);
+        // Emit data ke client
         socket.emit("camera_frames", data);
-        // console.log("Message from Redis:", data);
+
+        // Cek deteksi pertama (jika ada)
+        const det = data.detections?.[0];
+        if (det) {
+          const { label, confidence } = det;
+          // Hanya simpan jika label atau confidence berubah
+          if (
+            !lastDetection ||
+            lastDetection.label !== label ||
+            lastDetection.confidence !== confidence
+          ) {
+            await saveClassification(label, data.timestamp);
+            lastDetection = { label, confidence };
+            console.log(
+              `Saved classification: ${label} @ ${new Date(
+                data.timestamp * 1000
+              ).toISOString()}`
+            );
+          }
+        }
       } catch (err) {
-        console.error("Error parsing message from Redis:", err);
+        console.error("Error handling Redis message:", err);
       }
+    });
+
+    socket.on("disconnect", () => {
+      console.log("Client disconnected:", socket.id);
     });
   });
 };
