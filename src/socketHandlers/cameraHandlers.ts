@@ -6,18 +6,22 @@ export interface Classification {
   confidence: number;
 }
 
-export async function saveClassification(label: string, timestamp: number, confidence: number) {
+export async function saveClassification(
+  label: string,
+  timestamp: number,
+  confidence: number
+) {
   const client = await connectToDatabase();
   if (!client) {
     throw new Error("Failed to connect to MongoDB");
-  } 
+  }
   const db = client.db(); // gunakan nama default atau via URI
   const collection = db.collection<Classification>("classifications");
 
   const doc: Classification = {
     timestamp: new Date(timestamp * 1000), // detik → milidetik
     label,
-    confidence
+    confidence,
   };
 
   await collection.insertOne(doc);
@@ -48,8 +52,8 @@ export default (io: Server) => {
           // Hanya simpan jika label atau confidence berubah
           if (
             !lastDetection ||
-            lastDetection.label !== label ||
-            lastDetection.confidence !== confidence
+            (lastDetection.label !== label &&
+              lastDetection.confidence !== confidence)
           ) {
             await saveClassification(label, data.timestamp, confidence);
             lastDetection = { label, confidence };
