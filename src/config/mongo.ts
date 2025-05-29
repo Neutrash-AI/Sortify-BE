@@ -1,4 +1,5 @@
 import { MongoClient } from "mongodb";
+import "dotenv/config";
 
 const uri: string = process.env.MONGODB_URI || "";
 let cachedClient: MongoClient | null = null;
