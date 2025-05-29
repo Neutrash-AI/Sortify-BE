@@ -52,7 +52,9 @@ export default (io: Server) => {
           // Hanya simpan jika label atau confidence berubah
           if (
             !lastDetection ||
-            (lastDetection.label !== label && Math.abs(confidence) > 0.9)
+            (lastDetection.label !== label && label === "Organic"
+              ? Math.abs(confidence) > 0.4
+              : Math.abs(confidence) > 0.91)
           ) {
             await saveClassification(label, data.timestamp, confidence);
             lastDetection = { label, confidence };
