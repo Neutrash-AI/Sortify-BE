@@ -3,16 +3,21 @@ import { connectToDatabase } from "../config/mongo";
 export interface Classification {
   timestamp: Date;
   label: string;
+  confidence: number;
 }
 
-export async function saveClassification(label: string, timestamp: number) {
+export async function saveClassification(label: string, timestamp: number, confidence: number) {
   const client = await connectToDatabase();
+  if (!client) {
+    throw new Error("Failed to connect to MongoDB");
+  } 
   const db = client.db(); // gunakan nama default atau via URI
   const collection = db.collection<Classification>("classifications");
 
   const doc: Classification = {
     timestamp: new Date(timestamp * 1000), // detik → milidetik
     label,
+    confidence
   };
 
   await collection.insertOne(doc);
@@ -46,7 +51,7 @@ export default (io: Server) => {
             lastDetection.label !== label ||
             lastDetection.confidence !== confidence
           ) {
-            await saveClassification(label, data.timestamp);
+            await saveClassification(label, data.timestamp, confidence);
             lastDetection = { label, confidence };
             console.log(
               `Saved classification: ${label} @ ${new Date(
